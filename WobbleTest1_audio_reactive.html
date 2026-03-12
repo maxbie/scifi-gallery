@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Wobble Animation – Audio Reactive</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            background-color: #ffffff;
+            height: 100vh;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+        }
+        .container {
+            position: relative;
+            width: 100vw;
+            height: 100vh;
+            overflow: hidden;
+        }
+        #lottie-wrapper {
+            position: absolute;
+            left: -50vw;
+            top: -5vh;
+            width: 200vw;
+            height: 200vh;
+            opacity: 0.8;
+            transform-origin: center center;
+            transition: transform 0.08s ease-out;
+            will-change: transform;
+        }
+        #lottie {
+            width: 100%;
+            height: 100%;
+        }
+        .blur-overlay {
+            position: absolute;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            backdrop-filter: blur(45px);
+            -webkit-backdrop-filter: blur(45px);
+            z-index: 10;
+            pointer-events: none;
+        }
+        #start-btn {
+            position: absolute;
+            z-index: 100;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            padding: 18px 38px;
+            font-size: 18px;
+            font-weight: 600;
+            color: #333;
+            background: rgba(0,0,0,0.06);
+            border: 1px solid rgba(0,0,0,0.15);
+            border-radius: 14px;
+            cursor: pointer;
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            transition: background 0.2s, transform 0.15s;
+            letter-spacing: 0.02em;
+        }
+        #start-btn:hover {
+            background: rgba(0,0,0,0.1);
+            transform: translate(-50%, -50%) scale(1.04);
+        }
+        #start-btn.hidden { display: none; }
+        #level-bar {
+            position: absolute;
+            bottom: 28px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 100;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            opacity: 0;
+            transition: opacity 0.5s;
+            pointer-events: none;
+        }
+        #level-bar.visible { opacity: 1; }
+        #level-bar .label {
+            color: rgba(0,0,0,0.4);
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+        }
+        #level-track {
+            width: 180px;
+            height: 4px;
+            background: rgba(0,0,0,0.1);
+            border-radius: 2px;
+            overflow: hidden;
+        }
+        #level-fill {
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(90deg, #a733c7, #d902a0, #2779f8);
+            border-radius: 2px;
+            transition: width 0.08s ease-out;
+        }
+        #scale-val {
+            color: rgba(0,0,0,0.4);
+            font-size: 12px;
+            font-variant-numeric: tabular-nums;
+            min-width: 42px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div id="lottie-wrapper">
+            <div id="lottie"></div>
+        </div>
+        <div class="blur-overlay"></div>
+    </div>
+
+    <button id="start-btn">Mikrofon aktivieren</button>
+
+    <div id="level-bar">
+        <span class="label">Pegel</span>
+        <div id="level-track"><div id="level-fill"></div></div>
+        <span id="scale-val">1.00×</span>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/lottie-web/5.12.2/lottie.min.js"></script>
+    <script>
+        var animationData = {"v":"5.12.2","fr":16,"ip":0,"op":52,"w":1200,"h":1200,"nm":"Komp 1","ddd":0,"assets":[{"id":"comp_0","nm":"1.svg","fr":30,"layers":[{"ddd":0,"ind":1,"ty":4,"nm":"1.svg","cl":"svg","sr":1,"ks":{"o":{"a":0,"k":100,"ix":11},"r":{"a":0,"k":0,"ix":10},"p":{"a":0,"k":[365.5,155.5,0],"ix":2,"l":2},"a":{"a":0,"k":[365.5,155.5,0],"ix":1,"l":2},"s":{"a":0,"k":[100,100,100],"ix":6,"l":2}},"ao":0,"shapes":[{"ty":"gr","it":[{"ind":0,"ty":"sh","ix":1,"ks":{"a":0,"k":{"i":[[21.443,-4.332],[0.42,-0.138],[0,0],[-0.323,1.081],[-2.865,3.65],[-3.112,8.881],[-4.651,12.83],[-11.299,20.297],[-5.927,11.194],[-2.149,2.104],[-13.82,7.319],[-20.396,9.397],[-10.061,3.871],[0,0],[-12.616,1.698],[-25.62,-0.603],[-19.405,-4.724],[-4.015,-0.088],[-14.318,5.293],[-17.939,6.29],[-20.566,4.763],[-18.164,3.485],[-5.319,0.499],[0,0],[-21.331,-6.243],[-0.765,-3.57],[3.437,-5.163],[42.769,-19.73],[22.552,-8.504],[12.612,-4.602],[14.077,-14.216],[11.532,-11.096],[7.092,-6.4],[9.589,-5.567],[23.746,-5.738],[41.842,-6.525],[41.366,-7.046]],"o":[[-40.157,8.113],[0,0],[1.232,-3.682],[0.714,-2.084],[9.396,-10.131],[3.349,-9.558],[3.334,-9.197],[4.656,-8.363],[11.135,-21.031],[2.304,-2.255],[12.171,-6.446],[20.366,-9.383],[0,0],[22.398,-8.618],[10.68,-1.438],[19.869,0.468],[21.508,5.237],[5.423,0.119],[12.89,-4.765],[17.939,-6.29],[20.566,-4.763],[18.164,-3.485],[0,0],[8.555,-0.808],[16.518,4.834],[1.278,5.964],[-4.009,6.023],[-16.116,7.434],[-22.552,8.505],[-13.925,5.082],[-8.476,8.558],[-11.532,11.097],[-7.092,6.4],[-19.957,11.586],[-15.945,3.853],[-41.843,6.524],[-41.366,7.047]],"v":[[-306.15,144.401],[-365.672,156.029],[-358.506,151.223],[-356.707,145.334],[-351.854,137.26],[-335.839,114.175],[-317.835,77.988],[-310.273,39.474],[-290.452,7.85],[-272.603,-26.445],[-253.645,-38.239],[-198.961,-65.654],[-150.415,-85.88],[-150.37,-85.897],[-92.941,-106.036],[-35.025,-109.138],[23.136,-102.659],[61.152,-93.958],[85.542,-99.416],[139.957,-119.328],[190.393,-133.995],[257.466,-147.98],[288.729,-153.317],[289.322,-153.373],[338.787,-149.786],[364.185,-137.934],[362.236,-119.947],[309.432,-86.183],[250.495,-61.614],[191.15,-40.565],[149.853,-14.344],[114.354,21.109],[88.38,44.812],[65.679,63.663],[3.107,89.58],[-78.131,105.073],[-219.801,126.343]],"c":true},"ix":2},"nm":"Pfad 1","mn":"ADBE Vector Shape - Group","hd":false},{"ty":"fl","c":{"a":0,"k":[0.650980392157,0.196078446332,0.592156862745,1],"ix":4},"o":{"a":0,"k":100,"ix":5},"r":1,"bm":0,"nm":"Füllen 1","mn":"ADBE Vector Graphic - Fill","hd":false},{"ty":"tr","p":{"a":0,"k":[365.672,154.266],"ix":2},"a":{"a":0,"k":[0,0],"ix":1},"s":{"a":0,"k":[100,100],"ix":3},"r":{"a":0,"k":0,"ix":6},"o":{"a":0,"k":100,"ix":7},"sk":{"a":0,"k":0,"ix":4},"sa":{"a":0,"k":0,"ix":5},"nm":"Transformieren"}],"nm":"Gruppe 1","np":2,"cix":2,"bm":0,"ix":1,"mn":"ADBE Vector Group","hd":false}],"ip":0,"op":0.53333333333333,"st":0,"ct":1,"bm":0}]},{"id":"comp_1","nm":"3.svg","fr":30,"layers":[{"ddd":0,"ind":1,"ty":4,"nm":"3.svg","cl":"svg","sr":1,"ks":{"o":{"a":0,"k":100,"ix":11},"r":{"a":0,"k":0,"ix":10},"p":{"a":0,"k":[270,96,0],"ix":2,"l":2},"a":{"a":0,"k":[270,96,0],"ix":1,"l":2},"s":{"a":0,"k":[100,100,100],"ix":6,"l":2}},"ao":0,"shapes":[{"ty":"gr","it":[{"ind":0,"ty":"sh","ix":1,"ks":{"a":0,"k":{"i":[[-13.434,3.282],[-6.989,2.692],[0,0],[-2.473,-0.083],[-5.928,2.393],[-10.955,3.166],[-26.386,7.444],[-5.173,2.443],[-2.088,5.206],[7.644,8.084],[18.761,2.654],[15.393,-1.459],[10.974,0.374],[28.51,5.193],[12.756,6.331],[10.803,3.688],[3.325,0.135],[18.486,-5.488],[2.318,-5.807],[-0.281,-3.744],[5.189,-5.767],[36.863,-13.111],[18.361,-7.097],[4.379,-7.212],[-7.978,-8.836],[0,0],[-20.336,-3.847],[-25.7,0.378],[-25.404,1.655],[-22.771,3.334]],"o":[[20.184,-4.931],[0,0],[5.67,0.745],[2.474,0.083],[27.545,-12.445],[11.98,-3.463],[32.309,-9.116],[10.08,-4.762],[3.264,-8.142],[-6.091,-6.442],[-11.22,-1.588],[-15.396,1.459],[-8.592,-0.293],[-14.701,-2.678],[-18.235,-9.05],[-8.148,-2.781],[-3.377,-0.137],[-25.996,7.718],[-1.145,2.87],[0.957,12.794],[-5.817,6.466],[-19.871,7.067],[-27.126,10.486],[-4.44,7.312],[0,0],[8.312,9.206],[12.69,2.4],[17.187,-0.253],[25.403,-1.656],[22.771,-3.334]],"v":[[23.261,75.179],[60.698,64.277],[60.342,62.894],[71.451,64.184],[81.775,61.586],[130.309,39.595],[188.811,24.873],[246.7,7.285],[268.645,-7.917],[264.88,-34.393],[231.746,-52.17],[191.315,-53.866],[150.636,-51.289],[90.892,-59.464],[52.549,-70.527],[8.172,-91.445],[-8.099,-96.058],[-42.728,-89.253],[-87.701,-68.811],[-89.209,-59.424],[-94.41,-32.511],[-150.625,-2.243],[-223.116,23.161],[-263.934,44.563],[-264.546,69.595],[-264.465,69.686],[-227.529,91.92],[-174.022,95.817],[-106.134,93.085],[-33.2,85.681]],"c":true},"ix":2},"nm":"Pfad 1","mn":"ADBE Vector Shape - Group","hd":false},{"ty":"fl","c":{"a":0,"k":[0.850980451995,0.007843137255,0.611764705882,1],"ix":4},"o":{"a":0,"k":100,"ix":5},"r":1,"bm":0,"nm":"Füllen 1","mn":"ADBE Vector Graphic - Fill","hd":false},{"ty":"tr","p":{"a":0,"k":[269.059,96.066],"ix":2},"a":{"a":0,"k":[0,0],"ix":1},"s":{"a":0,"k":[100,100],"ix":3},"r":{"a":0,"k":0,"ix":6},"o":{"a":0,"k":100,"ix":7},"sk":{"a":0,"k":0,"ix":4},"sa":{"a":0,"k":0,"ix":5},"nm":"Transformieren"}],"nm":"Gruppe 1","np":2,"cix":2,"bm":0,"ix":1,"mn":"ADBE Vector Group","hd":false}],"ip":0,"op":0.53333333333333,"st":0,"ct":1,"bm":0}]},{"id":"comp_2","nm":"2.svg","fr":30,"layers":[{"ddd":0,"ind":1,"ty":4,"nm":"2.svg","cl":"svg","sr":1,"ks":{"o":{"a":0,"k":100,"ix":11},"r":{"a":0,"k":0,"ix":10},"p":{"a":0,"k":[377.5,119,0],"ix":2,"l":2},"a":{"a":0,"k":[377.5,119,0],"ix":1,"l":2},"s":{"a":0,"k":[100,100,100],"ix":6,"l":2}},"ao":0,"shapes":[{"ty":"gr","it":[{"ind":0,"ty":"sh","ix":1,"ks":{"a":0,"k":{"i":[[21.713,-2.004],[0.43,-0.092],[0,0],[-0.435,1.039],[-3.225,3.321],[-4.023,8.494],[-5.966,12.255],[-13.345,18.964],[-7.058,10.491],[-2.352,1.861],[-14.472,5.792],[-21.211,7.152],[-10.382,2.768],[0,0],[-12.685,0.334],[-25.331,-3.35],[-18.735,-6.78],[-3.97,-0.519],[-14.752,3.724],[-18.446,4.327],[-20.889,2.527],[-18.373,1.514],[-5.324,-0.075],[0,0],[-20.483,-8.496],[-0.381,-3.631],[3.953,-4.764],[44.478,-15.021],[23.252,-6.033],[12.987,-3.221],[15.456,-12.62],[12.604,-9.792],[7.706,-5.601],[10.093,-4.504],[24.144,-3.154],[42.164,-1.993],[41.747,-2.563]],"o":[[-40.661,3.753],[0,0],[1.61,-3.527],[0.928,-1.995],[10.384,-9.063],[4.33,-9.142],[4.277,-8.785],[5.499,-7.814],[13.26,-19.711],[2.522,-1.994],[12.745,-5.101],[21.178,-7.141],[0,0],[23.111,-6.162],[10.738,-0.282],[19.645,2.598],[20.766,7.515],[5.363,0.701],[13.28,-3.353],[18.446,-4.327],[20.889,-2.527],[18.372,-1.514],[0,0],[8.566,0.116],[15.862,6.579],[0.637,6.066],[-4.61,5.556],[-16.76,5.66],[-23.253,6.033],[-14.34,3.556],[-9.305,7.598],[-12.603,9.793],[-7.706,5.601],[-21.006,9.375],[-16.212,2.119],[-42.164,1.993],[-41.747,2.564]],"v":[[-317.345,113.496],[-377.573,118.664],[-369.961,114.655],[-367.555,108.995],[-361.892,101.49],[-343.578,80.261],[-321.908,46.221],[-310.342,8.747],[-287.352,-20.56],[-266.036,-52.736],[-245.997,-62.424],[-188.897,-83.806],[-138.641,-98.7],[-138.593,-98.712],[-79.542,-112.566],[-21.808,-109.431],[35.157,-96.746],[71.919,-84.016],[96.672,-86.822],[152.713,-100.774],[204.255,-109.939],[272.217,-116.641],[303.769,-118.589],[304.362,-118.581],[353.013,-109.705],[376.936,-95.196],[373.102,-77.525],[317.195,-49.63],[256.179,-31.534],[195.131,-16.982],[151.425,4.649],[112.491,36.081],[84.241,56.855],[59.748,73.157],[-5.014,92.202],[-87.174,98.881],[-229.847,104.815]],"c":true},"ix":2},"nm":"Pfad 1","mn":"ADBE Vector Shape - Group","hd":false},{"ty":"fl","c":{"a":0,"k":[0.152941176471,0.474509833841,0.972549079446,1],"ix":4},"o":{"a":0,"k":100,"ix":5},"r":1,"bm":0,"nm":"Füllen 1","mn":"ADBE Vector Graphic - Fill","hd":false},{"ty":"tr","p":{"a":0,"k":[377.573,118.597],"ix":2},"a":{"a":0,"k":[0,0],"ix":1},"s":{"a":0,"k":[100,100],"ix":3},"r":{"a":0,"k":0,"ix":6},"o":{"a":0,"k":100,"ix":7},"sk":{"a":0,"k":0,"ix":4},"sa":{"a":0,"k":0,"ix":5},"nm":"Transformieren"}],"nm":"Gruppe 1","np":2,"cix":2,"bm":0,"ix":1,"mn":"ADBE Vector Group","hd":false}],"ip":0,"op":0.53333333333333,"st":0,"ct":1,"bm":0}]}],"layers":[{"ddd":0,"ind":1,"ty":0,"nm":"1.svg","cl":"svg","refId":"comp_0","sr":99,"ks":{"o":{"a":0,"k":100,"ix":11},"r":{"a":0,"k":0,"ix":10},"p":{"a":1,"k":[{"i":{"x":0.833,"y":0.833},"o":{"x":0.167,"y":0.167},"t":0,"s":[242.656,655.533,0],"to":[0,0,0],"ti":[0,0,0]},{"i":{"x":0.833,"y":0.833},"o":{"x":0.167,"y":0.167},"t":23.994,"s":[129.175,691.751,0],"to":[0,0,0],"ti":[0,0,0]},{"t":52.0025,"s":[242.656,655.533,0]}],"ix":2,"l":2},"a":{"a":0,"k":[365.5,155.5,0],"ix":1,"l":2},"s":{"a":0,"k":[100,100,100],"ix":6,"l":2}},"ao":0,"w":731,"h":311,"ip":0,"op":52.8,"st":0,"bm":0},{"ddd":0,"ind":2,"ty":0,"nm":"3.svg","cl":"svg","refId":"comp_1","sr":99,"ks":{"o":{"a":0,"k":100,"ix":11},"r":{"a":0,"k":0,"ix":10},"p":{"a":1,"k":[{"i":{"x":0.833,"y":0.833},"o":{"x":0.167,"y":0.167},"t":0,"s":[991.147,653.119,0],"to":[0,0,0],"ti":[0,0,0]},{"i":{"x":0.833,"y":0.833},"o":{"x":0.167,"y":0.167},"t":23.994,"s":[877.666,583.099,0],"to":[0,0,0],"ti":[0,0,0]},{"t":52.0025,"s":[991.147,653.119,0]}],"ix":2,"l":2},"a":{"a":0,"k":[270,96,0],"ix":1,"l":2},"s":{"a":0,"k":[100,100,100],"ix":6,"l":2}},"ao":0,"w":540,"h":192,"ip":0,"op":52.8,"st":0,"bm":0},{"ddd":0,"ind":3,"ty":0,"nm":"2.svg","cl":"svg","refId":"comp_2","sr":99,"ks":{"o":{"a":0,"k":100,"ix":11},"r":{"a":0,"k":0,"ix":10},"p":{"a":1,"k":[{"i":{"x":0.833,"y":0.833},"o":{"x":0.167,"y":0.167},"t":0,"s":[713.481,621.73,0],"to":[0,0,0],"ti":[0,0,0]},{"i":{"x":0.833,"y":0.833},"o":{"x":0.167,"y":0.167},"t":23.994,"s":[566.197,609.658,0],"to":[0,0,0],"ti":[0,0,0]},{"t":52.0025,"s":[713.481,621.73,0]}],"ix":2,"l":2},"a":{"a":0,"k":[377.5,119,0],"ix":1,"l":2},"s":{"a":0,"k":[100,100,100],"ix":6,"l":2}},"ao":0,"w":755,"h":238,"ip":0,"op":52.8,"st":0,"bm":0}],"markers":[],"props":{}};
+
+        // Lottie init
+        var anim = lottie.loadAnimation({
+            container: document.getElementById('lottie'),
+            renderer: 'svg',
+            loop: true,
+            autoplay: true,
+            animationData: animationData
+        });
+
+        // Audio reactive scaling
+        const MIN_SCALE = 1.0;
+        const MAX_SCALE = 2.0;
+        const SMOOTHING = 0.12; // lower = snappier, higher = smoother
+
+        const wrapper = document.getElementById('lottie-wrapper');
+        const btn = document.getElementById('start-btn');
+        const levelBar = document.getElementById('level-bar');
+        const levelFill = document.getElementById('level-fill');
+        const scaleVal = document.getElementById('scale-val');
+
+        let currentScale = MIN_SCALE;
+        let targetScale = MIN_SCALE;
+        let audioCtx, analyser, dataArray, source;
+
+        btn.addEventListener('click', async () => {
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                analyser = audioCtx.createAnalyser();
+                analyser.fftSize = 512;
+                analyser.smoothingTimeConstant = 0.3;
+                source = audioCtx.createMediaStreamSource(stream);
+                source.connect(analyser);
+                dataArray = new Uint8Array(analyser.frequencyBinCount);
+
+                btn.classList.add('hidden');
+                levelBar.classList.add('visible');
+                tick();
+            } catch (e) {
+                btn.textContent = 'Mikrofon nicht verfügbar';
+                btn.style.borderColor = 'rgba(255,80,80,0.5)';
+                console.error(e);
+            }
+        });
+
+        function getVolume() {
+            analyser.getByteFrequencyData(dataArray);
+            // Focus on lower frequency bins (carry most energy)
+            var bins = Math.floor(dataArray.length * 0.6);
+            let sum = 0;
+            for (let i = 0; i < bins; i++) {
+                sum += dataArray[i];
+            }
+            var raw = sum / bins / 255;
+            // Amplify signal ~5x for better sensitivity
+            return Math.min(1, raw * 5);
+        }
+
+        function tick() {
+            const vol = getVolume();
+            targetScale = MIN_SCALE + vol * (MAX_SCALE - MIN_SCALE);
+            // Smooth interpolation — fast attack, slower release
+            const speed = targetScale > currentScale ? 0.35 : SMOOTHING;
+            currentScale += (targetScale - currentScale) * speed;
+            // Clamp
+            currentScale = Math.max(MIN_SCALE, Math.min(MAX_SCALE, currentScale));
+
+            wrapper.style.transform = `scale(${currentScale})`;
+            levelFill.style.width = `${((currentScale - MIN_SCALE) / (MAX_SCALE - MIN_SCALE)) * 100}%`;
+            scaleVal.textContent = currentScale.toFixed(2) + '×';
+
+            requestAnimationFrame(tick);
+        }
+    </script>
+</body>
+</html>
